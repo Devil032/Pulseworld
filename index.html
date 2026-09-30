@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -387,6 +388,35 @@
 
       <!-- ══════ LEFT: FINANCE & MARKETS ══════ -->
       <section class="lg:col-span-3 space-y-5" id="finance">
+
+        <!-- Live Alpha Vantage Card -->
+        <div data-section="finance">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="flex items-center gap-2 text-[12px] font-bold tracking-[0.1em] text-slate-200 uppercase">
+              <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> Live Stock API (Alpha Vantage)
+            </h2>
+            <span class="font-mono text-[9.5px] text-emerald-400/80 flex items-center gap-1">
+              <span class="w-1 h-1 rounded-full bg-emerald-400 live-dot"></span>60s Live
+            </span>
+          </div>
+          <div class="card p-4 border border-emerald-500/20 bg-emerald-500/[0.02]">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <div class="text-[13px] font-bold text-white tracking-wide" id="liveStockSymbol">IBM (Live)</div>
+                <div class="font-mono text-[9.5px] text-slate-500 tracking-wider">Alpha Vantage Feed</div>
+              </div>
+              <span id="liveStockChange" class="font-mono text-[10.5px] px-2 py-0.5 rounded text-emerald-300 bg-emerald-500/15">
+                लोड हो रहा है...
+              </span>
+            </div>
+            <div class="font-mono text-[20px] font-bold text-white tabular-nums leading-none mb-1" id="liveStockPrice">
+              --.--
+            </div>
+            <div class="font-mono text-[9.5px] text-slate-500" id="liveStockUpdated">
+              Waiting for data...
+            </div>
+          </div>
+        </div>
 
         <!-- Index cards -->
         <div data-section="finance">
@@ -791,6 +821,41 @@
 </main>
 
 <script>
+/* ══════════════════════════════════════════════════════════════
+   ALPHA VANTAGE LIVE DATA INTEGRATION
+   ══════════════════════════════════════════════════════════════ */
+const AV_API_KEY = '2ZQ3ALSUIKBALSHH';
+
+async function updateLiveStock(symbol = 'IBM') {
+  const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${AV_API_KEY}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const q = data['Global Quote'];
+    if (!q || !q['05. price']) return;
+
+    const price = parseFloat(q['05. price']).toFixed(2);
+    const change = parseFloat(q['09. change']).toFixed(2);
+    const pct = q['10. change percent'] || '0.00%';
+    const isUp = parseFloat(change) >= 0;
+
+    const priceEl = document.getElementById('liveStockPrice');
+    const changeEl = document.getElementById('liveStockChange');
+    const updateEl = document.getElementById('liveStockUpdated');
+
+    if (priceEl) priceEl.textContent = `$${price}`;
+    if (changeEl) {
+      changeEl.textContent = `${isUp ? '+' : ''}${change} (${pct})`;
+      changeEl.className = `font-mono text-[10.5px] px-2 py-0.5 rounded ${
+        isUp ? 'text-emerald-300 bg-emerald-500/15' : 'text-rose-300 bg-rose-500/15'
+      }`;
+    }
+    if (updateEl) updateEl.textContent = `Updated: ${timeNow()} UTC`;
+  } catch (err) {
+    console.error('Alpha Vantage fetch error:', err);
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════
    1. DATA LAYER (mock fallbacks mirroring API response shapes)
    ══════════════════════════════════════════════════════════════ */
@@ -1333,32 +1398,22 @@ function renderMiniJobs() {
 /* ══════════════════════════════════════════════════════════════
    7. INTERACTIONS
    ══════════════════════════════════════════════════════════════ */
-// Global topic filter
 function applyFilter(filter) {
-  $$('[data-cat-item]').forEach(el => {
-    el.style.display = (filter === 'all' || el.dataset.catItem === filter) ? '' : 'none';
-  });
-  $$('[data-section]').forEach(sec => {
-    const items = $$('[data-cat-item]', sec);
-    const visible = items.filter(i => i.style.display !== 'none').length;
-    sec.style.display = (filter === 'all' || visible > 0) ? '' : 'none';
-  });
-  const count = $$('[data-cat-item]').filter(e => e.style.display !== 'none').length;
+  $$('[data-cat-item]').forEach(el => {     el.style.display = (filter === 'all' \vert{}\vert{} el.dataset.catItem === filter) ? '' : 'none';   });$$
+('[data-section]').forEach(sec => {
+    const items = $$('[data-cat-item]', sec);     const visible = items.filter(i => i.style.display !== 'none').length;     sec.style.display = (filter === 'all' \vert{}\vert{} visible > 0) ? '' : 'none';   });   const count = $$('[data-cat-item]').filter(e => e.style.display !== 'none').length;
   $('#filterCount').textContent = `${count} STORIES`;
 }
 
-$$('#filterBar .chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    $$('#filterBar .chip').forEach(c => c.classList.remove('active'));
+$$('#filterBar .chip').forEach(chip => {   chip.addEventListener('click', () => {     $$
+('#filterBar .chip').forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
     applyFilter(chip.dataset.filter);
   });
 });
 
-// Movers tabs
-$$('.mover-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    $$('.mover-tab').forEach(t => {
+$$('.mover-tab').forEach(tab => {   tab.addEventListener('click', () => {     $$
+('.mover-tab').forEach(t => {
       t.classList.remove('text-emerald-300', 'bg-emerald-500/15', 'text-rose-300', 'bg-rose-500/15');
       t.classList.add('text-slate-500');
     });
@@ -1370,24 +1425,18 @@ $$('.mover-tab').forEach(tab => {
   });
 });
 
-// Careers filters
 $('#jobSearch').addEventListener('input', e => { careerState.q = e.target.value; renderJobs(); });
 $('#firmFilter').addEventListener('change', e => { careerState.firm = e.target.value; renderJobs(); });
 $('#expFilter').addEventListener('change', e => { careerState.exp = e.target.value; renderJobs(); });
-$('#domainFilter').addEventListener('change', e => { careerState.domain = e.target.value; renderJobs(); });
-
-// Architecture tabs
-$$('.arch-tab').forEach(tab => {
+$('#domainFilter').addEventListener('change', e => { careerState.domain = e.target.value; renderJobs(); });  $$('.arch-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    $$('.arch-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    $$('.arch-panel').forEach(p => p.classList.add('hidden'));
+    $$('.arch-tab').forEach(t => t.classList.remove('active'));     tab.classList.add('active');     $$
+('.arch-panel').forEach(p => p.classList.add('hidden'));
     const panel = $('#panel-' + tab.dataset.tab);
     if (panel) panel.classList.remove('hidden');
   });
 });
 
-// Mobile drawer
 const drawer = $('#drawer');
 const overlay = $('#drawerOverlay');
 function openDrawer() {
@@ -1401,9 +1450,7 @@ function closeDrawer() {
   document.body.style.overflow = '';
 }
 $('#menuBtn').addEventListener('click', openDrawer);
-$('#drawerClose').addEventListener('click', closeDrawer);
-overlay.addEventListener('click', closeDrawer);
-$$('.drawer-link').forEach(l => l.addEventListener('click', closeDrawer));
+$('#drawerClose').addEventListener('click', closeDrawer); overlay.addEventListener('click', closeDrawer); $$('.drawer-link').forEach(l => l.addEventListener('click', closeDrawer));
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 
 /* ══════════════════════════════════════════════════════════════
@@ -1430,18 +1477,19 @@ function boot() {
   tickClock();
   applyFilter('all');
 
-  // Seed live feed
+  // Alpha Vantage Live Data Call
+  updateLiveStock('IBM');
+  setInterval(() => updateLiveStock('IBM'), 60000); // 60 सेकंड में अपडेट
+
   for (let i = 0; i < 6; i++) streamFeed();
   $('#liveFeed').scrollTop = 0;
 
   icons();
 
-  // Timers — simulated SSE / revalidation cadence
-  setInterval(tickTicker, 2400);   // 60s revalidate → smoothed to 2.4s ticks
+  setInterval(tickTicker, 2400);
   setInterval(tickClock, 1000);
   setInterval(streamFeed, 6500);
 
-  // Hero timestamp nudge
   let heroAge = 0;
   setInterval(() => {
     heroAge++;
